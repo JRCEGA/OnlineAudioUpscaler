@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel="stylesheet">
+    <title>Audio Upscaler Project</title>
+</head>
+<body>
+    <header>
+        <h1 class="main-title">Audio Upscaler Project</h1>
+    </header>
+    <div class="container">
+        <div class="input-container">
+            <h2>Insert the audio file to upscale.</h2>
+            <span class="files-supported">Only <b>.wav</b> files supported</span>
+            <form action="/" method="post" enctype="multipart/form-data">
+                <label for="file-upload" class="custom-file-upload"><i class='bx bx-upload'></i> Choose a file</label>
+                <input id="file-upload" name="file" type="file" accept="audio/wav" style="display: none;" onchange="handleFileUpload(this.form);">
+                <input type="submit" value="Upload" style="display: none;">
+            </form>         
+        </div>
+        <div class="result-container" style="display: none">
+            <h2>Your file is ready to download!</h2>
+            <span>Click the button below to start your download</span>
+            <label for="download-button" class="custom-file-download"><i class='bx bx-download'></i> Download</label>
+            <button class="download-button" style="display: none;"><i class='bx bx-download'></i> Download</button>
+        </div>
+    </div>
+    <div class="bottom-text-container">
+        <div class="project-description-container">
+            <h2>Audio Upscaler Project</h2>
+            <h3>Project Description</h3>
+            <br>
+            <p>A lot of the most important moments in history, were recorded for us to remember, unfortunately, the quality of theese recordings is not always in perfect state.<p>
+            <br>
+            <p>Thats why with this tool, you can restore any audio you wish - this tool is optimized to work on any platform (desktop, tablets, and mobile devices).</p>
+            <br>
+            <p>Thank you for your support for this project! ♥️ </p>
+        </div>
+        <div class="row-container">
+            <div class="instructions-container">
+                <h2>How to upscale my audios?</h2>
+                <span>1. Look for any audio on YouTube you would like to upscale.</span>
+                <br>
+                <span>2. Download and save the .wav file in your device.</span>
+                <br>
+                <span>3. After that, simply press the choose file and select your audio. The process will start automatically.</span>
+                <br>
+                <span>4. As soon as the process is completed, you will see a "Download" button. Just click on it, the download will start.</span>
+            </div>
+            <div class="files-allowed-container">
+                <h2>Why only .wav files?</h2>
+                <p>As of today, the only file allowed is .wav, this is because the algorithm can only support this type of file, we plan on updating this in the near future.</p>
+                <br>
+                <p>While you wait for this, you are free to use any .wav converter, we recomend using <a href="https://4kdownload.to/envn/youtube-wav-downloader" target="_blank">this tool</a></p>
+            </div>
+        </div>    
+    </div>
+    <footer class="credits-text">By: Roberto Cebreros. Derek Lopez. Ana Paola Paez. Mariana Monroy</footer>
+    <script>
+        function handleFileUpload(form) {
+            var formData = new FormData(form);
+            
+            fetch('/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    document.querySelector('.input-container').style.display = 'none';
+                    document.querySelector('.result-container').style.display = 'flex';
+                    document.querySelector('.custom-file-download').onclick = function() {
+                        window.location.href = '/uploads/' + data.filename;
+                    };
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        
+            return false; // Evita el envío normal del formulario
+        }
+    </script>
+</body>
+</html>
