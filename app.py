@@ -3,6 +3,8 @@ from flask import Flask, request, redirect, url_for, send_from_directory, render
 import numpy as np
 import soundfile as sf
 import noisereduce as nr
+import librosa
+import scipy.signal
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -14,15 +16,47 @@ def convert_to_mono(data):
         return np.mean(data, axis=1)
     return data
 
-def your_audio_processing_function(data, rate):
+def apply_bandpass_filter(data, lowcut, highcut, rate, order=5):
+    nyquist = 0.5 * rate
+    low = lowcut / nyquist
+    high = highcut / nyquist
+    b, a = scipy.signal.butter(order, [low, high], btype='band')
+    y = scipy.signal.lfilter(b, a, data)
+    return y
+
+def apply_highpass_filter(data, cutoff, rate, order=5):
+    nyquist = 0.5 * rate
+    high = cutoff / nyquist
+    b, a = scipy.signal.butter(order, high, btype='high')
+    y = scipy.signal.lfilter(b, a, data)
+    return y
+
+def enhance_audio(data, rate):
     # Aplicar reducción de ruido con parámetros ajustados
     reduced_noise = nr.reduce_noise(
         y=data, 
         sr=rate, 
-        thresh_n_mult_nonstationary=2, 
+        thresh_n_mult_nonstationary=1.5,  # Ajustar el umbral
         stationary=False,
     )
-    return reduced_noise
+    
+    # Normalizar el audio
+    normalized_audio = librosa.util.normalize(reduced_noise)
+    
+    # Aplicar ecualización simple (amplificación de frecuencias altas)
+    band1 = apply_bandpass_filter(normalized_audio, 1000, 3000, rate, order=2)
+    band2 = apply_bandpass_filter(normalized_audio, 3000, 8000, rate, order=2)
+    
+    # Ajustar la ganancia de las bandas
+    enhanced_audio = normalized_audio + 0.3 * band1 + 0.3 * band2
+    
+    # Aplicar filtro de paso alto para mejorar claridad
+    highpass_audio = apply_highpass_filter(enhanced_audio, 5000, rate, order=2)
+    
+    # Combinar todo
+    final_audio = enhanced_audio + 0.2 * highpass_audio
+    
+    return final_audio
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
@@ -42,12 +76,12 @@ def upload_file():
             # Leer el archivo y procesarlo
             data, rate = sf.read(filepath)
             data_mono = convert_to_mono(data)
-            reduced_noise = your_audio_processing_function(data_mono, rate)
+            enhanced_audio = enhance_audio(data_mono, rate)
             
             # Guardar el archivo procesado
             processed_filename = 'processed_' + file.filename
             processed_filepath = os.path.join(app.config['UPLOAD_FOLDER'], processed_filename)
-            sf.write(processed_filepath, reduced_noise, rate)
+            sf.write(processed_filepath, enhanced_audio, rate)
             
             # En lugar de redirigir, devolver una respuesta JSON
             return {"success": True, "filename": processed_filename}

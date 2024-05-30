@@ -40,10 +40,11 @@ body {
 }
 
 .bottom-text-container {
-  margin-top: 50px;  
+  margin-top: 15px;  
   display: flex;
   flex-direction: row;
   gap: 25px;
+  height: 30vw;
 }
 
 .project-description-container {
@@ -60,7 +61,10 @@ body {
   align-items: center;
   margin-top: 50px;
   padding: 10px;
+  font-size: clamp(12px, 1vw, 18px);
 }
+
+
 
 .instructions-container {
   background: rgba( 255, 255, 255, 0.25 );
@@ -106,6 +110,9 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 25px;
+    height: 30vw;
+    font-size: clamp(12px, .5vw, 18px);
+
 }
 
 .files-allowed-container {
